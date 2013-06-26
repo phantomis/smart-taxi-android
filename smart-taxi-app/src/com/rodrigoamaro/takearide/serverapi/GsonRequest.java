@@ -1,5 +1,5 @@
 
-package com.rodrigoamaro.takearide;
+package com.rodrigoamaro.takearide.serverapi;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -15,6 +15,7 @@ import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.HttpHeaderParser;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,20 +25,15 @@ public class GsonRequest<T> extends Request<T> {
     /** Charset for request. */
     private static final String PROTOCOL_CHARSET = "utf-8";
     /** Content type for request. */
-    private static final String PROTOCOL_CONTENT_TYPE =
-            String.format("application/json; charset=%s", PROTOCOL_CHARSET);
+    private static final String PROTOCOL_CONTENT_TYPE = String.format("application/json; charset=%s", PROTOCOL_CHARSET);
     private final Gson mGson;
     private final Class<T> mClazz;
     private final Listener<T> mListener;
     private final String mRequestBody;
     private Map<String, String> headers = new HashMap<String, String>();
+    private Type mTypez;
 
-
-    public GsonRequest(int method,
-            String url,
-            Class<T> clazz,
-            Listener<T> listener,
-            ErrorListener errorListener) {
+    public GsonRequest(int method,String url, Class<T> clazz, Listener<T> listener, ErrorListener errorListener) {
         super(method, url, errorListener);
         this.mClazz = clazz;
         this.mListener = listener;
@@ -45,12 +41,7 @@ public class GsonRequest<T> extends Request<T> {
         mRequestBody = null;
     }
 
-    public GsonRequest(int method,
-            String url,
-            Class<T> clazz,
-            JSONObject requestObject,
-            Listener<T> listener,
-            ErrorListener errorListener) {
+    public GsonRequest(int method, String url, Class<T> clazz, JSONObject requestObject, Listener<T> listener, ErrorListener errorListener) {
         super(method, url, errorListener);
         this.mClazz = clazz;
         this.mListener = listener;
@@ -58,16 +49,20 @@ public class GsonRequest<T> extends Request<T> {
         mRequestBody = requestObject == null ? null : requestObject.toString();
     }
 
-    public GsonRequest(int method,
-            String url,
-            Class<T> clazz,
-            Listener<T> listener,
-            ErrorListener errorListener,
-            Gson gson) {
+    public GsonRequest(int method, String url, Class<T> clazz, Listener<T> listener, ErrorListener errorListener, Gson gson) {
         super(method, url, errorListener);
         this.mClazz = clazz;
         this.mListener = listener;
         mGson = gson;
+        mRequestBody = null;
+    }
+    
+    public GsonRequest(int method, String url, Type type, Listener<T> listener, ErrorListener errorListener) {
+        super(method, url, errorListener);
+        this.mClazz = null;
+        this.mTypez = type;
+        this.mListener = listener;
+        mGson = new Gson();
         mRequestBody = null;
     }
 
@@ -79,9 +74,14 @@ public class GsonRequest<T> extends Request<T> {
     @Override
     protected Response<T> parseNetworkResponse(NetworkResponse response) {
         try {
+            
             String json = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-            return Response.success(mGson.fromJson(json, mClazz),
-                    HttpHeaderParser.parseCacheHeaders(response));
+            
+            if(mClazz != null){
+                return Response.success(mGson.fromJson(json, mClazz), HttpHeaderParser.parseCacheHeaders(response));
+            }else{
+                return Response.success((T)mGson.fromJson(json, mTypez), HttpHeaderParser.parseCacheHeaders(response));
+            }
         } catch (UnsupportedEncodingException e) {
             return Response.error(new ParseError(e));
         } catch (JsonSyntaxException e) {
@@ -105,7 +105,6 @@ public class GsonRequest<T> extends Request<T> {
         return PROTOCOL_CONTENT_TYPE;
     }
 
-    
     @Override
     public Map<String, String> getHeaders() throws AuthFailureError {
         return headers;

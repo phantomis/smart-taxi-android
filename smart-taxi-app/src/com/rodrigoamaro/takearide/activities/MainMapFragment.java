@@ -1,4 +1,7 @@
-package com.rodrigoamaro.takearide;
+
+package com.rodrigoamaro.takearide.activities;
+
+import java.util.LinkedList;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
@@ -10,6 +13,11 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.rodrigoamaro.takearide.R;
+import com.rodrigoamaro.takearide.R.drawable;
+import com.rodrigoamaro.takearide.R.id;
+import com.rodrigoamaro.takearide.R.layout;
+import com.rodrigoamaro.takearide.service.LocationService;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -20,26 +28,30 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.Toast;
 
-public class MainMapFragment extends FragmentActivity{
-   
+public class MainMapFragment extends FragmentActivity {
+
     /**
-     * Note that this may be null if the Google Play services APK is not available.
+     * Note that this may be null if the Google Play services APK is not
+     * available.
      */
     private GoogleMap mMap;
     private LocationService mBoundService;
-    
+
     private String TAG = "MainMapFragment";
-    
+
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             // This is called when the connection with the service has been
             // established, giving us the service object we can use to
-            // interact with the service.  Because we have bound to a explicit
+            // interact with the service. Because we have bound to a explicit
             // service that we know is running in our own process, we can
             // cast its IBinder to a concrete class and directly access it.
-            mBoundService = ((LocationService.LocalBinder)service).getService();
+            mBoundService = ((LocationService.LocalBinder) service).getService();
 
             // Tell the user about this for our demo.
             Toast.makeText(getApplicationContext(), "local_service_connected",
@@ -57,14 +69,14 @@ public class MainMapFragment extends FragmentActivity{
         }
     };
     private boolean mIsBound;
-    
-    
+    private Spinner mSpinner;
+
     void doBindService() {
-        // Establish a connection with the service.  We use an explicit
+        // Establish a connection with the service. We use an explicit
         // class name because we want a specific service implementation that
         // we know will be running in our own process (and thus won't be
         // supporting component replacement by other applications).
-        bindService(new Intent(MainMapFragment.this,LocationService.class), mConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(MainMapFragment.this, LocationService.class), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
 
@@ -75,20 +87,61 @@ public class MainMapFragment extends FragmentActivity{
             mIsBound = false;
         }
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         doUnbindService();
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_bg));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_fragment_activity);
         setUpMapIfNeeded();
         doBindService();
+        setupActionBar();
+
+        mSpinner = (Spinner) findViewById(R.id.status_spinner);
+        LinkedList<ObjetosClase> comidas = new LinkedList<ObjetosClase>();
+        comidas.add(new ObjetosClase(1, "Salchichas"));
+        comidas.add(new ObjetosClase(2, "Huevos"));
+        comidas.add(new ObjetosClase(3, "Tomate"));
+
+        // Creamos el adaptador
+        ArrayAdapter<ObjetosClase> spinner_adapter = new ArrayAdapter<ObjetosClase>(this, android.R.layout.simple_spinner_item, comidas);
+        // A–adimos el layout para el menœ y se lo damos al spinner
+        spinner_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpinner.setAdapter(spinner_adapter);
+
+    }
+
+    private void setupActionBar() {
+        //setTheme(theme.whatever);
         
-        
+    }
+
+    public class ObjetosClase {
+        int id;
+        String nombre;
+
+        // Constructor
+        public ObjetosClase(int id, String nombre) {
+            super();
+            this.id = id;
+            this.nombre = nombre;
+        }
+
+        @Override
+        public String toString() {
+            return nombre;
+        }
+
+        public int getId() {
+            return id;
+        }
     }
 
     @Override
@@ -96,31 +149,35 @@ public class MainMapFragment extends FragmentActivity{
         super.onResume();
         setUpMapIfNeeded();
     }
-    
+
     @Override
     protected void onStop() {
         // Disconnecting the client invalidates it.
-        
+
         super.onStop();
     }
 
     /**
-     * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
+     * Sets up the map if it is possible to do so (i.e., the Google Play
+     * services APK is correctly installed) and the map has not already been
+     * instantiated.. This will ensure that we only ever call
+     * {@link #setUpMap()} once when {@link #mMap} is not null.
      * <p>
      * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
-     * install/update the Google Play services APK on their device.
+     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt
+     * for the user to install/update the Google Play services APK on their
+     * device.
      * <p>
-     * A user can return to this FragmentActivity after following the prompt and correctly
-     * installing/updating/enabling the Google Play services. Since the FragmentActivity may not have been
-     * completely destroyed during this process (it is likely that it would only be stopped or
-     * paused), {@link #onCreate(Bundle)} may not be called again so we should call this method in
-     * {@link #onResume()} to guarantee that it will be called.
+     * A user can return to this FragmentActivity after following the prompt and
+     * correctly installing/updating/enabling the Google Play services. Since
+     * the FragmentActivity may not have been completely destroyed during this
+     * process (it is likely that it would only be stopped or paused),
+     * {@link #onCreate(Bundle)} may not be called again so we should call this
+     * method in {@link #onResume()} to guarantee that it will be called.
      */
     private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
+        // Do a null check to confirm that we have not already instantiated the
+        // map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
@@ -133,14 +190,15 @@ public class MainMapFragment extends FragmentActivity{
     }
 
     /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
+     * This is where we can add markers or lines, add listeners or move the
+     * camera. In this case, we just add a marker near Africa.
      * <p>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
+     * This should only be called once and when we are sure that {@link #mMap}
+     * is not null.
      */
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
-        
+
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 

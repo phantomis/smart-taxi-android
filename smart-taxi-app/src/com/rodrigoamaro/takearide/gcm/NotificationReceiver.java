@@ -1,6 +1,9 @@
-package com.rodrigoamaro.takearide;
+package com.rodrigoamaro.takearide.gcm;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.rodrigoamaro.takearide.R;
+import com.rodrigoamaro.takearide.R.drawable;
+import com.rodrigoamaro.takearide.activities.MainMapFragment;
 
 import android.app.Activity;
 import android.app.NotificationManager;

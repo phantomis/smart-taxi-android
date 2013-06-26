@@ -1,13 +1,13 @@
-package com.rodrigoamaro.takearide.serverapi;
+package com.rodrigoamaro.takearide.serverapi.models;
 
 import java.util.Date;
 
 public class LocationModel {
 
-    double latitude;
-    double longitude;
-    float speed;
-    long timestamp;
+    public double latitude;
+    public double longitude;
+    public float speed;
+    public long timestamp;
     
     public LocationModel() {}
     

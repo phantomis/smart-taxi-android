@@ -1,27 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="horizontal" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
 
-    <fragment
-        android:id="@+id/map"
+    <LinearLayout
+        android:id="@+id/map_holder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        class="com.google.android.gms.maps.SupportMapFragment" />
+        android:orientation="horizontal" >
 
-    <!--  View
-        android:layout_width="1dp"
-        android:layout_height="fill_parent"
-        android:background="#ff000000" />
+        <fragment
+            android:id="@+id/map"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            class="com.google.android.gms.maps.SupportMapFragment" />
 
-    <fragment
-        android:id="@+id/map_fragment_2"
-        android:name="com.rodrigoamaro.takearide.ClientesFragment"
-        android:layout_width="0dp"
-        android:layout_height="fill_parent"
-        android:layout_weight="1" >
-    </fragment -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="fill_parent"
+            android:background="#ff000000" />
 
-</LinearLayout>
+        <fragment
+            android:id="@+id/map_fragment_2"
+            android:name="com.rodrigoamaro.takearide.activities.ClientesFragment"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+        </fragment>
+    </LinearLayout>
+
+    <Spinner
+        android:id="@+id/status_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/map_holder" />
+
+</RelativeLayout>

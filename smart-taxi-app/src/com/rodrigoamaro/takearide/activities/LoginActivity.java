@@ -1,12 +1,18 @@
 
-package com.rodrigoamaro.takearide;
+package com.rodrigoamaro.takearide.activities;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.rodrigoamaro.takearide.serverapi.SmartTaxiAdapter;
+import com.rodrigoamaro.takearide.R;
+import com.rodrigoamaro.takearide.R.id;
+import com.rodrigoamaro.takearide.R.layout;
+import com.rodrigoamaro.takearide.serverapi.SmartTaxiResponseAdapter;
 import com.rodrigoamaro.takearide.serverapi.SmartTaxiAsync;
+import com.rodrigoamaro.takearide.serverapi.models.TastypieResponse;
+import com.rodrigoamaro.takearide.serverapi.models.TaxiModel;
+import com.rodrigoamaro.takearide.serverapi.models.TokenResponse;
 
 import android.app.Activity;
 import android.content.Context;
@@ -22,6 +28,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 public class LoginActivity extends Activity {
 
@@ -46,8 +53,6 @@ public class LoginActivity extends Activity {
     private GoogleCloudMessaging gcm;
     private String regid;
     private Context context;
-    private boolean isRegIdReady = false;
-    protected boolean isLoginReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +65,7 @@ public class LoginActivity extends Activity {
 
             @Override
             public void onClick(View v) {
-                isLoginReady  = true;
-                if (isRegIdReady || regid.length() > 0) {
-                    doLogin(mUser.getText().toString(), mPassword.getText().toString());
-                }
+                doLogin(mUser.getText().toString(), mPassword.getText().toString());
             }
         });
         context = getApplicationContext();
@@ -160,11 +162,7 @@ public class LoginActivity extends Activity {
                     regid = gcm.register(SENDER_ID);
                     msg = "Device registered, registration id=" + regid;
                     Log.d(TAG, "reg_id: " + regid);
-                    isRegIdReady = true;
                     setRegistrationId(context, regid);
-                    if (isLoginReady) {
-                        doLogin(mUser.getText().toString(), mPassword.getText().toString());
-                    }
                 } catch (IOException ex) {
                     msg = "Error :" + ex.getMessage();
                 }
@@ -204,15 +202,56 @@ public class LoginActivity extends Activity {
 
     private void doLogin(String username, String password) {
 
-        TelephonyManager tManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        String deviceId = tManager.getDeviceId();
-        
-        Log.d(TAG, String.format("datos del login: %s %s %s %s", username, password, deviceId, regid));
-        SmartTaxiAsync.getInstance(getApplicationContext()).doLogin(username, password, deviceId, regid, new SmartTaxiAdapter() {
+        SmartTaxiAsync.getInstance(getApplicationContext()).doLogin(username, password, new SmartTaxiResponseAdapter() {
             @Override
-            public void gotLoginSucess() {
+            public void gotLoginSuccess(TokenResponse response) {
+                SmartTaxiAsync.getInstance(getApplicationContext()).getTaxisDetail(new SmartTaxiResponseAdapter() {
+                    @Override
+                    public void gotTaxis(TastypieResponse<TaxiModel> taxis) {
+                        Toast.makeText(getApplicationContext(), "Bienvenido " + taxis.objects.get(0).license_plate, Toast.LENGTH_LONG).show();
+
+                        SmartTaxiAsync.getInstance(getApplicationContext()).changeStatus(TaxiModel.STATUS_AVAILABLE, new SmartTaxiResponseAdapter() {
+                            @Override
+                            public void changeStatusSuccess() {
+                                Toast.makeText(getApplicationContext(), "Tu estado es disponible", Toast.LENGTH_LONG).show();
+
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Toast.makeText(getApplicationContext(), "Error cambiando el estado", Toast.LENGTH_LONG).show();
+                            }
+                        });
+                        TelephonyManager tManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+                        String deviceId = tManager.getDeviceId();
+                        SmartTaxiAsync.getInstance(getApplicationContext()).setDeviceData(regid, deviceId, new SmartTaxiResponseAdapter() {
+
+                            @Override
+                            public void addDeviceSuccess() {
+                                Toast.makeText(getApplicationContext(), "Registrado a mensajeria push", Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Toast.makeText(getApplicationContext(), "error registrando mensajeria push", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(getApplicationContext(), "Error obteniendo taxis", Toast.LENGTH_LONG).show();
+                    }
+                });
+
                 Intent i = new Intent(getApplicationContext(), MainMapFragment.class);
                 startActivity(i);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(getApplicationContext(), "Error en login", Toast.LENGTH_LONG).show();
             }
         });
     }

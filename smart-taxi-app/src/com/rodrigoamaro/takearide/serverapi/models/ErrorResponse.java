@@ -1,4 +1,4 @@
-package com.rodrigoamaro.takearide;
+package com.rodrigoamaro.takearide.serverapi.models;
 
 public class ErrorResponse {
 

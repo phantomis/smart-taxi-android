@@ -1,5 +1,5 @@
 
-package com.rodrigoamaro.takearide;
+package com.rodrigoamaro.takearide.service;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
@@ -7,8 +7,11 @@ import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailed
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.rodrigoamaro.takearide.serverapi.LocationModel;
+import com.rodrigoamaro.takearide.R;
+import com.rodrigoamaro.takearide.R.drawable;
+import com.rodrigoamaro.takearide.activities.MainMapFragment;
 import com.rodrigoamaro.takearide.serverapi.SmartTaxiAsync;
+import com.rodrigoamaro.takearide.serverapi.models.LocationModel;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -60,7 +63,7 @@ public class LocationService extends Service {
     };
 
     public class LocalBinder extends Binder {
-        LocationService getService() {
+        public LocationService getService() {
             return LocationService.this;
         }
     }

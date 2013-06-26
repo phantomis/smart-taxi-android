@@ -1,6 +1,6 @@
-package com.rodrigoamaro.takearide;
-import android.app.ListFragment;
+package com.rodrigoamaro.takearide.activities;
 import android.os.Bundle;
+import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
