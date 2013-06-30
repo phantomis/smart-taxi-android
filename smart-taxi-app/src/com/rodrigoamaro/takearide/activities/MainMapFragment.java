@@ -9,31 +9,51 @@ import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailed
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.rodrigoamaro.takearide.R;
 import com.rodrigoamaro.takearide.R.drawable;
 import com.rodrigoamaro.takearide.R.id;
 import com.rodrigoamaro.takearide.R.layout;
+import com.rodrigoamaro.takearide.activities.ClientesFragment.OnReceivedClient;
+import com.rodrigoamaro.takearide.serverapi.SmartTaxiAsync;
+import com.rodrigoamaro.takearide.serverapi.SmartTaxiResponseAdapter;
+import com.rodrigoamaro.takearide.serverapi.models.ClientModel;
+import com.rodrigoamaro.takearide.serverapi.models.NotificationModel;
+import com.rodrigoamaro.takearide.serverapi.models.TastypieResponse;
+import com.rodrigoamaro.takearide.serverapi.models.TaxiModel;
 import com.rodrigoamaro.takearide.service.LocationService;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-public class MainMapFragment extends FragmentActivity {
+public class MainMapFragment extends FragmentActivity implements OnReceivedClient{
 
     /**
      * Note that this may be null if the Google Play services APK is not
@@ -43,6 +63,8 @@ public class MainMapFragment extends FragmentActivity {
     private LocationService mBoundService;
 
     private String TAG = "MainMapFragment";
+
+    
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -70,6 +92,9 @@ public class MainMapFragment extends FragmentActivity {
     };
     private boolean mIsBound;
     private Spinner mSpinner;
+    private Marker clientMarker;
+    private Polyline routePoly;
+    protected boolean isFirstTime = false;
 
     void doBindService() {
         // Establish a connection with the service. We use an explicit
@@ -96,8 +121,8 @@ public class MainMapFragment extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-        getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_bg));
+        //requestWindowFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
+        //getActionBar().setBackgroundDrawable(getResources().getDrawable(R.drawable.actionbar_bg));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_fragment_activity);
         setUpMapIfNeeded();
@@ -105,49 +130,48 @@ public class MainMapFragment extends FragmentActivity {
         setupActionBar();
 
         mSpinner = (Spinner) findViewById(R.id.status_spinner);
-        LinkedList<ObjetosClase> comidas = new LinkedList<ObjetosClase>();
-        comidas.add(new ObjetosClase(1, "Salchichas"));
-        comidas.add(new ObjetosClase(2, "Huevos"));
-        comidas.add(new ObjetosClase(3, "Tomate"));
+        mSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
-        // Creamos el adaptador
-        ArrayAdapter<ObjetosClase> spinner_adapter = new ArrayAdapter<ObjetosClase>(this, android.R.layout.simple_spinner_item, comidas);
-        // A–adimos el layout para el menœ y se lo damos al spinner
-        spinner_adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mSpinner.setAdapter(spinner_adapter);
+            @Override
+            public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+                Toast.makeText(getApplicationContext(), mSpinner.getSelectedItem().toString() + " "+arg2, Toast.LENGTH_LONG).show();
+                SmartTaxiAsync.getInstance(getApplicationContext()).changeStatus(arg2+1, new SmartTaxiResponseAdapter() {
+                    @Override
+                    public void changeStatusSuccess() {
+                        Toast.makeText(getApplicationContext(), "Tu estado fue cambiado ", Toast.LENGTH_LONG).show();
+
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(getApplicationContext(), "Error cambiando el estado", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> arg0) {
+                // TODO Auto-generated method stub
+
+            }
+        });
 
     }
 
     private void setupActionBar() {
-        //setTheme(theme.whatever);
-        
-    }
+        // setTheme(theme.whatever);
 
-    public class ObjetosClase {
-        int id;
-        String nombre;
-
-        // Constructor
-        public ObjetosClase(int id, String nombre) {
-            super();
-            this.id = id;
-            this.nombre = nombre;
-        }
-
-        @Override
-        public String toString() {
-            return nombre;
-        }
-
-        public int getId() {
-            return id;
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -198,8 +222,40 @@ public class MainMapFragment extends FragmentActivity {
      */
     private void setUpMap() {
         mMap.setMyLocationEnabled(true);
+        mMap.setOnMyLocationChangeListener(new OnMyLocationChangeListener() {
+            
+            @Override
+            public void onMyLocationChange(Location loc) {
+                if(isFirstTime){
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(loc.getLatitude(), loc.getLongitude()), 15));
+                    isFirstTime = !isFirstTime; 
+                }
+                
+            }
+        });
+        //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
 
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    @Override
+    public void onReceivedClient(NotificationModel travel) {
+        // TODO Auto-generated method stub
+        
+        Location myLocation = mMap.getMyLocation();
+        LatLng myPosition = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        LatLng clientPosition = new LatLng(travel.client.location.latitude, travel.client.location.longitude);
+        
+        //Calculamos el poligono que encierra a los markadores
+        final LatLngBounds.Builder bc = new LatLngBounds.Builder();
+        bc.include(myPosition);
+        bc.include(clientPosition);
+        
+        if( clientMarker != null) clientMarker.remove();
+        clientMarker = mMap.addMarker(new MarkerOptions().position(clientPosition).title(travel.client.location.address_name).snippet(travel.client.name));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 100));
+        
+        if(routePoly != null) routePoly.remove();
+        routePoly = mMap.addPolyline(new PolylineOptions().add(myPosition, myPosition).geodesic(true));
+        
     }
 
 }

@@ -2,4 +2,10 @@
 <resources>
     <string name="hello">Hola mundo</string>
     <string name="app_name">Take A Ride</string>
+    <string name="taxi_status_prompt">Status</string>
+    <string-array name="taxi_status">
+        <item >Disponible</item>
+        <item >No Disponible</item>
+        <item >Ausente</item>
+    </string-array>
 </resources>

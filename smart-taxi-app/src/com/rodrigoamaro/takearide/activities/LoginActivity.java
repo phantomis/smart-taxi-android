@@ -22,6 +22,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -222,8 +223,7 @@ public class LoginActivity extends Activity {
                                 Toast.makeText(getApplicationContext(), "Error cambiando el estado", Toast.LENGTH_LONG).show();
                             }
                         });
-                        TelephonyManager tManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                        String deviceId = tManager.getDeviceId();
+                        String deviceId = Secure.getString(getApplicationContext().getContentResolver(),Secure.ANDROID_ID);
                         SmartTaxiAsync.getInstance(getApplicationContext()).setDeviceData(regid, deviceId, new SmartTaxiResponseAdapter() {
 
                             @Override
@@ -237,6 +237,8 @@ public class LoginActivity extends Activity {
                             }
                         });
 
+                        Intent i = new Intent(getApplicationContext(), MainMapFragment.class);
+                        startActivity(i);
                     }
 
                     @Override
@@ -245,8 +247,6 @@ public class LoginActivity extends Activity {
                     }
                 });
 
-                Intent i = new Intent(getApplicationContext(), MainMapFragment.class);
-                startActivity(i);
             }
 
             @Override

@@ -14,7 +14,7 @@
             android:id="@+id/map"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="2"
+            android:layout_weight="3"
             class="com.google.android.gms.maps.SupportMapFragment" />
 
         <View
@@ -27,14 +27,18 @@
             android:name="com.rodrigoamaro.takearide.activities.ClientesFragment"
             android:layout_width="0dp"
             android:layout_height="fill_parent"
-            android:layout_weight="1" >
-        </fragment>
+            android:layout_weight="1" />
+
     </LinearLayout>
 
     <Spinner
         android:id="@+id/status_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@id/map_holder" />
+        android:layout_alignBottom="@id/map_holder"
+        android:background="#dddddd" 
+        android:entries="@array/taxi_status"
+        android:prompt="@string/taxi_status_prompt"
+        android:padding="30dp"/>
 
 </RelativeLayout>

@@ -25,17 +25,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.rodrigoamaro.takearide.serverapi.models.NotificationModel;
 import com.rodrigoamaro.takearide.serverapi.models.TokenResponse;
 import com.rodrigoamaro.takearide.serverapi.models.LocationModel;
 import com.rodrigoamaro.takearide.serverapi.models.TastypieResponse;
 import com.rodrigoamaro.takearide.serverapi.models.TaxiModel;
 import com.rodrigoamaro.takearide.serverapi.resources.LocationResources;
+import com.rodrigoamaro.takearide.serverapi.resources.NotificationResources;
 import com.rodrigoamaro.takearide.serverapi.resources.TaxiResources;
 
-public class SmartTaxiAsync implements LocationResources, TaxiResources {
+public class SmartTaxiAsync implements LocationResources, TaxiResources, NotificationResources {
     private static SmartTaxiAsync INSTANCE = null;
     private static RequestQueue mRequestQueue;
-    private static final String BASE_URL = "http://intense-savannah-7759.herokuapp.com/api/v1/";
+    private static final String BASE_URL = "http://192.168.0.103:8080/api/v1/";
     protected static final String TAG = "SmartTaxiAsync";
     public static String apiKey = "3f474d91e206165791ded130564a61c8d07bcd3c";
     public static String userName = "johndoe";
@@ -101,15 +103,15 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
         mRequestQueue.add(jr);
 
     }
-    
-    private String makeAuthBasic(String user, String pass){
+
+    private String makeAuthBasic(String user, String pass) {
         String authString = user + ":" + pass;
         Log.d(TAG, authString);
-        String  authEncBytes = Base64.encodeToString(authString.getBytes(),Base64.NO_WRAP);
+        String authEncBytes = Base64.encodeToString(authString.getBytes(), Base64.NO_WRAP);
         String auth = "Basic " + authEncBytes;
         Log.d(TAG, auth);
         return auth;
-        
+
     }
 
     @Override
@@ -173,7 +175,7 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
         Log.d(TAG, "" + locJson);
         GsonRequest<Void> jr = new GsonRequest<Void>(
                 Request.Method.PUT,
-                getAbsoluteUrl("taxi/"+taxi.id+"/"),
+                getAbsoluteUrl("taxi/" + taxi.id + "/"),
                 Void.class,
                 locJson,
                 new Response.Listener<Void>() {
@@ -199,7 +201,8 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
 
     @Override
     public void getTaxisDetail(final SmartTaxiResponseAdapter responder) {
-        Type fooType = new TypeToken<TastypieResponse<TaxiModel>>() {}.getType();
+        Type fooType = new TypeToken<TastypieResponse<TaxiModel>>() {
+        }.getType();
 
         GsonRequest<TastypieResponse<TaxiModel>> jr = new GsonRequest<TastypieResponse<TaxiModel>>(
                 Request.Method.GET,
@@ -228,8 +231,8 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
     private void setAuthHeader(GsonRequest<?> jr) {
         jr.setHeader("Authorization", "ApiKey " + SmartTaxiAsync.userName + ":" + SmartTaxiAsync.apiKey);
     }
-    
-    private void setBasicAuthHeader(GsonRequest<?> jr,String user, String pass ) {
+
+    private void setBasicAuthHeader(GsonRequest<?> jr, String user, String pass) {
         jr.setHeader("Authorization", makeAuthBasic(user, pass));
     }
 
@@ -247,7 +250,7 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
         Log.d(TAG, "" + deviceData);
         GsonRequest<Void> jr = new GsonRequest<Void>(
                 Request.Method.PUT,
-                getAbsoluteUrl("taxi/"+taxi.id+"/device/"),
+                getAbsoluteUrl("taxi/" + taxi.id + "/device/"),
                 Void.class,
                 deviceData,
                 new Response.Listener<Void>() {
@@ -255,7 +258,7 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
                     @Override
                     public void onResponse(Void response) {
                         responder.addDeviceSuccess();
-                        
+
                     }
                 },
                 new Response.ErrorListener() {
@@ -271,5 +274,81 @@ public class SmartTaxiAsync implements LocationResources, TaxiResources {
 
         mRequestQueue.add(jr);
     }
+
+    @Override
+    public void getNotifications(final SmartTaxiResponseAdapter responder) {
+
+        Type fooType = new TypeToken<TastypieResponse<NotificationModel>>() {
+        }.getType();
+
+        GsonRequest<TastypieResponse<NotificationModel>> jr = new GsonRequest<TastypieResponse<NotificationModel>>(
+                Request.Method.GET,
+                getAbsoluteUrl("notificaciones/"),
+                fooType,
+                new Response.Listener<TastypieResponse<NotificationModel>>() {
+
+                    @Override
+                    public void onResponse(TastypieResponse<NotificationModel> response) {
+                        responder.gotNotifications(response);
+                    }
+                },
+                new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        responder.onError(error);
+
+                    }
+                });
+        setAuthHeader(jr);
+        mRequestQueue.add(jr);
+
+    }
+
+    @Override
+    public void acceptNotification(int id, final SmartTaxiResponseAdapter responder) {
+        changeStatusNotification(NOTIF_RESPONDED, id, responder);
+    }
+
+    @Override
+    public void cancelNotification(int id, SmartTaxiResponseAdapter responder) {
+        changeStatusNotification(NOTIF_REJECTED, id, responder);
+    }
     
+    private void changeStatusNotification(int status, int id, final SmartTaxiResponseAdapter responder){
+        JSONObject locJson = new JSONObject();
+        try {
+            locJson = new JSONObject();
+            locJson.put("status", "" + status);
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        Log.d(TAG, "" + locJson);
+        GsonRequest<Void> jr = new GsonRequest<Void>(
+                Request.Method.PUT,
+                getAbsoluteUrl("notificaciones/" + id + "/"),
+                Void.class,
+                locJson,
+                new Response.Listener<Void>() {
+
+                    @Override
+                    public void onResponse(Void response) {
+                        responder.acceptedNotification();
+                    }
+                },
+                new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        responder.onError(error);
+
+                    }
+                });
+
+        setAuthHeader(jr);
+
+        mRequestQueue.add(jr);
+    }
+
 }
