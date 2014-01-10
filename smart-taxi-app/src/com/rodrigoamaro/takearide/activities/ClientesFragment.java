@@ -1,6 +1,9 @@
 
 package com.rodrigoamaro.takearide.activities;
 
+import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
+
 import com.google.android.gms.internal.al;
 import com.rodrigoamaro.takearide.R;
 import com.rodrigoamaro.takearide.serverapi.SmartTaxiAsync;
@@ -8,6 +11,7 @@ import com.rodrigoamaro.takearide.serverapi.SmartTaxiResponseAdapter;
 import com.rodrigoamaro.takearide.serverapi.models.ClientModel;
 import com.rodrigoamaro.takearide.serverapi.models.NotificationModel;
 import com.rodrigoamaro.takearide.serverapi.models.TastypieResponse;
+import com.rodrigoamaro.takearide.service.LocationService;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -129,8 +133,20 @@ public class ClientesFragment extends ListFragment implements OnItemClickListene
             NotificationModel c = getItem(position);
             if (c != null) {
                 holder = (ViewHolder) v.getTag();
-                holder.name.setText(c.client.name);
-                holder.address_name.setText(c.client.location.address_name);
+                try {
+                    Log.d(TAG, "client: " + c.client.location.latitude + " " + c.client.location.longitude);
+                    Log.d(TAG, "you" + LocationService.actualLatitude + " " + LocationService.actualLongitude);
+                    double distance = ClientesFragment.distance(c.client.location.latitude, c.client.location.longitude, LocationService.actualLatitude, LocationService.actualLongitude);
+                    holder.name.setText(new String(c.client.name.getBytes(), "UTF-8"));
+                    DecimalFormat df = new DecimalFormat("###.##");
+                    
+                    holder.address_name.setText("a " + df.format(distance) + "Kms");
+                    
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                
 
             }
 
@@ -200,5 +216,22 @@ public class ClientesFragment extends ListFragment implements OnItemClickListene
     
     public interface OnReceivedClient{
         void onReceivedClient(NotificationModel client);
+    }
+    
+    public static double distance(double firstLatitude, double firstLongitude, double secondLatitude, double secondLongitude){
+        int earth_radium_km = 6371;
+     // Conversão de graus pra radianos das latitudes
+        double firstLatToRad = Math.toRadians(firstLatitude);
+        double secondLatToRad = Math.toRadians(secondLatitude);
+
+        // Diferença das longitudes
+        double deltaLongitudeInRad = Math.toRadians(secondLongitude
+        - firstLongitude);
+
+        // Cálcula da distância entre os pontos
+        return Math.acos(Math.cos(firstLatToRad) * Math.cos(secondLatToRad)
+        * Math.cos(deltaLongitudeInRad) + Math.sin(firstLatToRad)
+        * Math.sin(secondLatToRad))
+        * earth_radium_km;
     }
 }

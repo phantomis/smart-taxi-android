@@ -3,29 +3,27 @@
     android:id="@+id/social_row"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical" >
+    android:orientation="vertical" 
+    android:background="#F0F0F0"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/notif_address_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:text="a 56 Km"
+        android:textColor="#222"
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/notif_name"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
-        android:layout_marginTop="10dp"
-        android:fontFamily="sans-serif-condensed"
-        android:gravity="right"
-        android:text="asdfasdf"
-        android:textSize="12sp" >
-    </TextView>
-
-    <TextView
-        android:id="@+id/notif_address_name"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:autoLink="web"
-        android:fontFamily="sans-serif-condensed"
-        android:text="qwerqwer"
-        android:textSize="14sp" >
+        android:text="Rodrigo Amaro"
+        android:textColor="#222"
+        android:textSize="20sp">
     </TextView>
 
 </LinearLayout>

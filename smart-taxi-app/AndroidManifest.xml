@@ -48,6 +48,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="com.rodrigoamaro.takearide.activities.TravelActivity"
+            android:theme="@android:style/Theme.Holo.Light" >
+        </activity>
+        
         <receiver
             android:name="com.rodrigoamaro.takearide.gcm.NotificationReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >

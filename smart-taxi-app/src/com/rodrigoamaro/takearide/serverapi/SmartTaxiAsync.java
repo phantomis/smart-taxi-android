@@ -37,7 +37,9 @@ import com.rodrigoamaro.takearide.serverapi.resources.TaxiResources;
 public class SmartTaxiAsync implements LocationResources, TaxiResources, NotificationResources {
     private static SmartTaxiAsync INSTANCE = null;
     private static RequestQueue mRequestQueue;
-    private static final String BASE_URL = "http://192.168.0.103:8080/api/v1/";
+    private static final String DEV_URL = "http://192.168.0.103:8080/api/v1/";
+    private static final String PROD_URL = "http://smart-taxi.herokuapp.com/api/v1/";
+    private static final String BASE_URL = PROD_URL;
     protected static final String TAG = "SmartTaxiAsync";
     public static String apiKey = "3f474d91e206165791ded130564a61c8d07bcd3c";
     public static String userName = "johndoe";

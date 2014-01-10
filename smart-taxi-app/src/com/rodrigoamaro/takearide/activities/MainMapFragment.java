@@ -1,55 +1,31 @@
 
 package com.rodrigoamaro.takearide.activities;
 
-import java.util.LinkedList;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesClient.ConnectionCallbacks;
-import com.google.android.gms.common.GooglePlayServicesClient.OnConnectionFailedListener;
-import com.google.android.gms.location.LocationClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.rodrigoamaro.takearide.R;
-import com.rodrigoamaro.takearide.R.drawable;
-import com.rodrigoamaro.takearide.R.id;
-import com.rodrigoamaro.takearide.R.layout;
 import com.rodrigoamaro.takearide.activities.ClientesFragment.OnReceivedClient;
 import com.rodrigoamaro.takearide.serverapi.SmartTaxiAsync;
 import com.rodrigoamaro.takearide.serverapi.SmartTaxiResponseAdapter;
-import com.rodrigoamaro.takearide.serverapi.models.ClientModel;
 import com.rodrigoamaro.takearide.serverapi.models.NotificationModel;
-import com.rodrigoamaro.takearide.serverapi.models.TastypieResponse;
 import com.rodrigoamaro.takearide.serverapi.models.TaxiModel;
 import com.rodrigoamaro.takearide.service.LocationService;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -67,6 +43,7 @@ public class MainMapFragment extends FragmentActivity implements OnReceivedClien
     
 
     private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             // This is called when the connection with the service has been
             // established, giving us the service object we can use to
@@ -80,6 +57,7 @@ public class MainMapFragment extends FragmentActivity implements OnReceivedClien
                     Toast.LENGTH_SHORT).show();
         }
 
+        @Override
         public void onServiceDisconnected(ComponentName className) {
             // This is called when the connection with the service has been
             // unexpectedly disconnected -- that is, its process crashed.
@@ -92,8 +70,7 @@ public class MainMapFragment extends FragmentActivity implements OnReceivedClien
     };
     private boolean mIsBound;
     private Spinner mSpinner;
-    private Marker clientMarker;
-    private Polyline routePoly;
+    
     protected boolean isFirstTime = false;
 
     void doBindService() {
@@ -239,22 +216,13 @@ public class MainMapFragment extends FragmentActivity implements OnReceivedClien
     @Override
     public void onReceivedClient(NotificationModel travel) {
         // TODO Auto-generated method stub
-        
-        Location myLocation = mMap.getMyLocation();
-        LatLng myPosition = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-        LatLng clientPosition = new LatLng(travel.client.location.latitude, travel.client.location.longitude);
-        
-        //Calculamos el poligono que encierra a los markadores
-        final LatLngBounds.Builder bc = new LatLngBounds.Builder();
-        bc.include(myPosition);
-        bc.include(clientPosition);
-        
-        if( clientMarker != null) clientMarker.remove();
-        clientMarker = mMap.addMarker(new MarkerOptions().position(clientPosition).title(travel.client.location.address_name).snippet(travel.client.name));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bc.build(), 100));
-        
-        if(routePoly != null) routePoly.remove();
-        routePoly = mMap.addPolyline(new PolylineOptions().add(myPosition, myPosition).geodesic(true));
+       
+        Intent i=new Intent(this,TravelActivity.class);
+        i.putExtra("latitude",travel.client.location.latitude);
+        i.putExtra("longitude",travel.client.location.longitude);
+        i.putExtra("address_name",travel.client.location.address_name);
+        i.putExtra("name",travel.client.name);
+        startActivity(i);
         
     }
 

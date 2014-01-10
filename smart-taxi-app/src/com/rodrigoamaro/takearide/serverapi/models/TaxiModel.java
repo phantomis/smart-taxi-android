@@ -5,6 +5,7 @@ public class TaxiModel {
     public final static int STATUS_AVAILABLE = 1;
     public final static int STATUS_NOTAVAILABLE = 2;
     public final static int STATUS_AWAY = 3;
+    public final static int STATUS_WORKING = 4;
 
     public int id;
     public String license_plate;

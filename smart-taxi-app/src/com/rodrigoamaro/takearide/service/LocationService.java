@@ -48,6 +48,9 @@ public class LocationService extends Service {
     // RemoteService for a more complete example.
     private final IBinder mBinder = new LocalBinder();
 
+    
+    public static double actualLatitude = 0;
+    public static double actualLongitude = 0;
     private Handler mHandler = new Handler();
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
@@ -130,6 +133,8 @@ public class LocationService extends Service {
 
                     @Override
                     public void onLocationChanged(Location location) {
+                        LocationService.actualLatitude = location.getLatitude();
+                        LocationService.actualLongitude = location.getLongitude();
                         Log.d(TAG,
                                 "onLocationChanged lat:" + location.getLatitude() + " long:" + location.getLongitude() + " speed:"
                                         + location.getSpeed());

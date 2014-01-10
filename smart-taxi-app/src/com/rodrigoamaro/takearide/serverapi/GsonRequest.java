@@ -1,6 +1,8 @@
 
 package com.rodrigoamaro.takearide.serverapi;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -74,9 +76,9 @@ public class GsonRequest<T> extends Request<T> {
     @Override
     protected Response<T> parseNetworkResponse(NetworkResponse response) {
         try {
-            
-            String json = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-            
+            Log.d("VOLLEY", HttpHeaderParser.parseCharset(response.headers));
+            String json = new String(response.data, PROTOCOL_CHARSET);
+            Log.d("VOLLEY", json);
             if(mClazz != null){
                 return Response.success(mGson.fromJson(json, mClazz), HttpHeaderParser.parseCacheHeaders(response));
             }else{
