@@ -11,6 +11,7 @@ public class Utils {
         String txt = ctx.getClass().toString() + " " + e.toString() + " " + e.getMessage();
         Log.e(tag, txt);
         Log.e("test", "lets get the toast roar!");
+        Long l = new Long("1");
         Toast.makeText(ctx, txt, Toast.LENGTH_LONG).show();
     }
 }
